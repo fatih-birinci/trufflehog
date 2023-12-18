@@ -458,8 +458,7 @@ import (
 	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors/noticeable"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors/notion"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors/nozbeteams"
-	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors/npmtoken"
-	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors/npmtokenv2"
+	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors/npm"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors/nugetapikey"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors/numverify"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors/nutritionix"
@@ -1528,8 +1527,9 @@ func DefaultDetectors() []detectors.Detector {
 		ngc.Scanner{},
 		gemini.Scanner{},
 		digitaloceanv2.Scanner{},
-		npmtoken.Scanner{},
-		npmtokenv2.Scanner{},
+		npm.ScannerGeneric{},
+		npm.ScannerV1{},
+		npm.ScannerV2{},
 		sqlserver.Scanner{},
 		redis.Scanner{},
 		ftp.Scanner{},

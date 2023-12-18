@@ -17,6 +17,7 @@ import (
 	"github.com/trufflesecurity/trufflehog/v3/pkg/context"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/decoders"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors"
+	"github.com/trufflesecurity/trufflehog/v3/pkg/engine/ahocorasick"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/giturl"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/output"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/pb/detectorspb"
@@ -65,7 +66,7 @@ type Engine struct {
 	printAvgDetectorTime bool
 
 	// ahoCorasickHandler manages the Aho-Corasick trie and related keyword lookups.
-	ahoCorasickCore *AhoCorasickCore
+	ahoCorasickCore *ahocorasick.AhoCorasickCore
 
 	// Engine synchronization primitives.
 	sourceManager        *sources.SourceManager
@@ -314,7 +315,7 @@ func (e *Engine) initialize(ctx context.Context, options ...Option) error {
 	ctx.Logger().V(4).Info("engine initialized")
 
 	ctx.Logger().V(4).Info("setting up aho-corasick core")
-	e.ahoCorasickCore = NewAhoCorasickCore(e.detectors)
+	e.ahoCorasickCore = ahocorasick.NewAhoCorasickCore(e.detectors)
 	ctx.Logger().V(4).Info("set up aho-corasick core")
 
 	return nil
@@ -463,7 +464,7 @@ func (e *Engine) detectorWorker(ctx context.Context) {
 
 	// Reuse the same map to avoid allocations.
 	const avgDetectorsPerChunk = 2
-	chunkSpecificDetectors := make(map[DetectorKey]detectors.Detector, avgDetectorsPerChunk)
+	chunkSpecificDetectors := make(map[ahocorasick.DetectorKey]detectors.Detector, avgDetectorsPerChunk)
 	for originalChunk := range e.ChunksChan() {
 		for chunk := range sources.Chunker(originalChunk) {
 			atomic.AddUint64(&e.metrics.BytesScanned, uint64(len(chunk.Data)))
@@ -581,11 +582,11 @@ func (e *Engine) notifyResults(ctx context.Context) {
 		// want to include duplicate results with the same decoder type.
 		// Duplicate results with the same decoder type SHOULD have their own entry in the
 		// results list, this would happen if the same secret is found multiple times.
-		key := fmt.Sprintf("%s%s%s%+v", r.DetectorType.String(), r.Raw, r.RawV2, r.SourceMetadata)
-		if val, ok := e.dedupeCache.Get(key); ok {
-			if res, ok := val.(detectorspb.DecoderType); ok && res != r.DecoderType {
-				continue
-			}
+		key := fmt.Sprintf("%s%s%s", r.DetectorType.String(), r.Raw, r.RawV2)
+		if _, ok := e.dedupeCache.Get(key); ok {
+			//if res, ok := val.(detectorspb.DecoderType); ok && res != r.DecoderType {
+			continue
+			//}
 		}
 		e.dedupeCache.Add(key, r.DecoderType)
 
