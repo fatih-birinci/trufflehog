@@ -582,11 +582,11 @@ func (e *Engine) notifyResults(ctx context.Context) {
 		// want to include duplicate results with the same decoder type.
 		// Duplicate results with the same decoder type SHOULD have their own entry in the
 		// results list, this would happen if the same secret is found multiple times.
-		key := fmt.Sprintf("%s%s%s", r.DetectorType.String(), r.Raw, r.RawV2)
-		if _, ok := e.dedupeCache.Get(key); ok {
-			//if res, ok := val.(detectorspb.DecoderType); ok && res != r.DecoderType {
-			continue
-			//}
+		key := fmt.Sprintf("%s%s%s%+v", r.DetectorType.String(), r.Raw, r.RawV2, r.SourceMetadata)
+		if val, ok := e.dedupeCache.Get(key); ok {
+			if res, ok := val.(detectorspb.DecoderType); ok && res != r.DecoderType {
+				continue
+			}
 		}
 		e.dedupeCache.Add(key, r.DecoderType)
 
