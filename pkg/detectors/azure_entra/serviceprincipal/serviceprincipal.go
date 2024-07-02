@@ -1,10 +1,11 @@
-package azure
+package azure_entra_serviceprincipal
 
 import (
 	"context"
 	"fmt"
-	regexp "github.com/wasilibs/go-re2"
 	"strings"
+
+	regexp "github.com/wasilibs/go-re2"
 
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 
